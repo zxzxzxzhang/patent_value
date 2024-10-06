@@ -51,11 +51,15 @@ class df_Translator:
 
         self.translator = GoogleTranslator(source=self.source_lang, target=self.target_lang)
 
-        # reead the input file
+        # read the input file
         if self.input_type == '.xlsx':
             self.df = pd.read_excel(self.input_file)
         else:
             self.df = pd.read_csv(self.input_file)
+
+        # create a new column
+        if self.target_column not in self.df.columns:
+            self.df[self.target_column] = None
 
         # ensure that the target column is of object type to store strings
         self.df[self.target_column] = self.df[self.target_column].astype(object)
