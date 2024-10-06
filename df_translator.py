@@ -145,7 +145,7 @@ class df_Translator:
             print(f"Done")
 
             # sleep for a while to avoid rate limiting
-            print('sleeping for 100 seconds')
+            print(f'sleeping for {self.sleep_time} seconds')
             time.sleep(self.sleep_time)
 
 
