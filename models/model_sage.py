@@ -1,0 +1,68 @@
+'''
+Pre-release Notice
+
+This repository contains code associated with our ongoing research project titled "Research on patent portfolio valuation based on Multi-SAGE-TechNexus model". The code is being made available for **review purposes only** and is subject to the following restrictions:
+
+1. Non-commercial use only: This code may only be used for academic or non-commercial purposes.
+2. No redistribution or modification**: Redistribution or modification of this code is not permitted until the associated research paper has been officially published.
+3. Temporary access: The code in this repository is subject to updates and may change without notice until the final release.
+
+After the publication of the corresponding research paper, we plan to release the code under a more permissive open-source license (e.g., MIT License).
+
+For any questions or specific permissions, please contact zhangx2293@gmail.com with the subject "Pre-release Code Inquiry".
+
+Written by Xiang Zhang
+'''
+
+import torch
+from torch_geometric.nn import SAGEConv
+import torch.nn.functional as F
+
+class HierarchicalBidirectionalSAGE(torch.nn.Module):
+    def __init__(self, in_channels, hidden_channels1, hidden_channels2, out_channels, num_layers=3, dropout=0.5):
+        super(HierarchicalBidirectionalSAGE, self).__init__()
+        self.num_layers = num_layers
+
+        self.conv1 = SAGEConv(in_channels, hidden_channels1)  # Forward
+        self.conv2 = SAGEConv(hidden_channels1, hidden_channels2)  # Backward
+        self.conv3 = SAGEConv(hidden_channels2, out_channels)  # Forward
+
+        # dropout
+        self.dropout = dropout
+
+        # LayerNorm
+        self.layer_norm1 = torch.nn.LayerNorm(hidden_channels1)
+        self.layer_norm2 = torch.nn.LayerNorm(hidden_channels2)
+
+        # Residual
+        self.fc_residual = torch.nn.Linear(in_channels, hidden_channels1)  # Residual layer 1
+        self.fc_residual_out = torch.nn.Linear(in_channels, out_channels)  # Residual layer 3
+
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
+
+        residual_input = x
+
+        # layer1: Forward + Residual
+        x = self.conv1(x, edge_index)
+        x = self.layer_norm1(x)
+        x = F.gelu(x)
+
+        residual_x = self.fc_residual(residual_input)
+        x = x + residual_x
+        x = F.dropout(x, p=self.dropout, training=self.training)
+
+        # layer2: Backward
+        reversed_edge_index = torch.stack([edge_index[1], edge_index[0]], dim=0)  # 反转边
+        x = self.conv2(x, reversed_edge_index)
+        x = self.layer_norm2(x)
+        x = F.gelu(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+
+        # layer3: Forward + Residual
+        x = self.conv3(x, edge_index)
+
+        residual_x_out = self.fc_residual_out(residual_input)
+        x = x + residual_x_out
+
+        return x
