@@ -38,7 +38,6 @@ def truncate_text(text, max_length=500, redundancy=20):
     else:
         return text[:end_idx + 1]
 
-# 应用该函数到摘要和权利要求字段
 df['摘要 (英文)'] = df['摘要 (英文)'].apply(lambda x: truncate_text(x, max_length=500))
 df['权利要求 (英文)'] = df['权利要求 (英文)'].apply(lambda x: truncate_text(x, max_length=500))
 
