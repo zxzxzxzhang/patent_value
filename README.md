@@ -29,7 +29,6 @@ For inquiries or specific permissions, contact us at zhangx2293@gmail.com with t
 |   |-- translate.py         # translation
 |-- models
     |-- model_gat.py         # Graph Attention Network (GAT) implementation
-    |-- model_Gated.py       # Gated Graph Neural Network implementation
     |-- model_gcn.py         # Graph Convolutional Network (GCN) implementation
     |-- model_multi_sage.py  # Multi-layer GraphSAGE implementation
     |-- model_sage.py        # Basic GraphSAGE model implementation
